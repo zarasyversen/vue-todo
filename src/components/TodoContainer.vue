@@ -1,80 +1,72 @@
 <template>
   <div class="container">
-      <div class="inner">
-          <div class="inner-top">
-              <Header />
-          </div>
+    <div class="inner">
+      <div class="inner-top">
+        <Header />
+        <ul>
+          <li v-for="(todo, index) in todos" :key="`todo-${index}`">
+            {{ todo.id }}
+            {{ todo.time }}
+            {{ todo.isCompleted }}
+            {{ todo.day }}
+            {{ todo.title }}
+          </li>
+        </ul>
+        <button @click="addTodoItem('hej')">add Hej</button>
       </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
-import { Options, Vue } from 'vue-class-component';
-import Header from './presentational/Header.vue';
-
+import { Options, Vue } from 'vue-class-component'
+import Header from './presentational/Header.vue'
+import { TodoItem } from './../classes/TodoItem'
+import { Watch } from 'vue-property-decorator'
 
 @Options({
+  name: 'TodoContainer',
   components: {
-    Header
+    Header,
   },
 })
 export default class TodoContainer extends Vue {
+  public todos: TodoItem[] = []
+  public getTodos!: (newTodos: []) => void
 
-    public addTodoItem = (title: string): void => {
-        const newTodo: TodoItem = new TodoItem;
-        newTodo.title = title;
+  public addTodoItem = (title: string): void => {
+    const newTodo: TodoItem = new TodoItem()
+    newTodo.title = title
+    this.todos.push(newTodo)
+    const temp = JSON.stringify(this.todos)
+    localStorage.setItem('todos', temp)
+  }
+
+  public setTodos(): void {
+    const temp = JSON.stringify(this.todos)
+    localStorage.setItem('todos', temp)
+  }
+
+  mounted(): void {
+    const storedTodos = localStorage.getItem('todos')
+    if (storedTodos) {
+      this.todos = JSON.parse(storedTodos)
     }
+    console.log('hallo')
 
-}
+    console.log(this.todos)
 
-export class TodoItem implements ITodoItem {
-    public id: number;
-    public title: string;
-    public completed: boolean;
-    public updated: boolean;
-    public day: string;
-    public time: string;
+    //   this.addTodoItem('hejsan');
+  }
 
-    constructor() {
-        this.id = Math.random() * 1000;
-        this.title =  '';
-        this.completed = false;
-        this.updated = false;
-        this.day = this.getCurrentDay();
-        this.time = this.getCurrentTime();
+  @Watch('todos', { deep: true })
+  private todosUpdated() {
+    const storedTodos = localStorage.getItem('todos')
+    if (storedTodos) {
+      this.todos = JSON.parse(storedTodos)
     }
-
-    private getCurrentTime(): string {
-        const now = new Date();
-        const currentHours: number = now.getHours();
-        let currentMinutes: number | string = now.getMinutes();
-
-        if (currentMinutes < 10) {
-            currentMinutes = `0${currentMinutes}`;
-        }
-
-        return `${currentHours}:${currentMinutes}`;
-    }
-
-    public getCurrentDay() : string {
-        const date = new Date();
-        const currentDate = date.getDate() + "/" + (date.getMonth() + 1) + "/" + date.getFullYear();
-        const currentDay = date.toLocaleString("en-GB", { weekday: "long" });
-        return `${currentDay} (${currentDate})`;
-    }
-
-}
-
-export interface ITodoItem {
-    id: number,
-    title: string,
-    completed: boolean,
-    updated: boolean,
-    day: string,
-    time: string,
+  }
 }
 </script>
 
-<style>
-
-</style>
+<style></style>
